@@ -69,7 +69,7 @@
   <!-- Đăng nhập -->
   <div id="manDangNhap" class="card">
     <label for="maNV">Mã nhân viên</label>
-    <input id="maNV" type="text" autocapitalize="characters" autocomplete="username" placeholder="VD: NV01">
+    <input id="maNV" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="VD: anhquan">
     <label for="pin">Mã PIN</label>
     <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••">
     <div class="check"><input id="nho" type="checkbox" checked><label for="nho" style="margin:0">Ghi nhớ trên điện thoại này</label></div>
@@ -263,7 +263,7 @@
   }
 
   $('btnDangNhap').onclick = function () {
-    var maNV = $('maNV').value.trim().toUpperCase(), pin = $('pin').value.trim();
+    var maNV = $('maNV').value.trim().toLowerCase(), pin = $('pin').value.trim();
     if (!maNV || !pin) { baoLoi($('msgDangNhap'), 'Hãy nhập mã nhân viên và mã PIN.', 'err'); return; }
     dangNhap(maNV, pin, false);
   };
