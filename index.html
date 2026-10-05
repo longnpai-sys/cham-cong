@@ -54,12 +54,16 @@
     .canh-bao { font-size: 12px; font-weight: 600; color: #b45309; background: #fef3c7; border-radius: 6px; padding: 2px 8px; }
     .canh-bao.do { color: #991b1b; background: #fee2e2; }
     .ngay li { padding: 6px 0; border-bottom: 0; font-size: 14px; }
-    select, input[type=date], input[type=time] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #d1d5db; border-radius: 10px; background: #fff; color: #1f2937; }
+    select, input[type=date], input[type=time] { display: block; width: 100%; min-width: 0; max-width: 100%; min-height: 48px; padding: 12px;
+      font-size: 16px; border: 1px solid #d1d5db; border-radius: 10px; background: #fff; color: #1f2937; -webkit-appearance: none; appearance: none; text-align: left; }
+    input[type=date]::-webkit-date-and-time-value, input[type=time]::-webkit-date-and-time-value { text-align: left; }
+    select { background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%), linear-gradient(135deg, #6b7280 50%, transparent 50%);
+      background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%; background-size: 6px 6px; background-repeat: no-repeat; }
     .seg { display: flex; gap: 8px; margin-top: 10px; }
     .seg button { flex: 1; padding: 12px 0; font-size: 16px; background: #f3f4f6; color: #374151; border: 2px solid transparent; }
     .seg button.chon { background: #eef2ff; color: #1e1b4b; border-color: #1e1b4b; }
-    .hai-cot { display: flex; gap: 12px; }
-    .hai-cot > div { flex: 1; min-width: 0; }
+    .hai-cot { display: block; }
+    .hai-cot > div { min-width: 0; }
     .btn-bao { background: #1e1b4b; color: #fff; margin-top: 16px; }
     .tb { padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
     .tb:last-child { border-bottom: 0; }
