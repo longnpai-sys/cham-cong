@@ -18,7 +18,7 @@
     .wrap { max-width: 460px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) 16px 40px; }
     header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
     header img { width: 64px; height: auto; flex-shrink: 0; }
-    h1 { font-size: 22px; font-weight: 800; letter-spacing: .5px; margin: 0; color: #1e1b4b; }
+    h1 { font-size: 20px; font-weight: 800; letter-spacing: .3px; margin: 0; color: #1e1b4b; white-space: nowrap; }
     .cty { color: #4b5563; font-size: 13px; margin-top: 2px; line-height: 1.35; }
     .card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 16px; }
     label { display: block; font-size: 14px; margin: 10px 0 6px; color: #374151; }
@@ -54,16 +54,46 @@
     .canh-bao { font-size: 12px; font-weight: 600; color: #b45309; background: #fef3c7; border-radius: 6px; padding: 2px 8px; }
     .canh-bao.do { color: #991b1b; background: #fee2e2; }
     .ngay li { padding: 6px 0; border-bottom: 0; font-size: 14px; }
+    select, input[type=date], input[type=time] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #d1d5db; border-radius: 10px; background: #fff; color: #1f2937; }
+    .seg { display: flex; gap: 8px; margin-top: 10px; }
+    .seg button { flex: 1; padding: 12px 0; font-size: 16px; background: #f3f4f6; color: #374151; border: 2px solid transparent; }
+    .seg button.chon { background: #eef2ff; color: #1e1b4b; border-color: #1e1b4b; }
+    .hai-cot { display: flex; gap: 12px; }
+    .hai-cot > div { flex: 1; min-width: 0; }
+    .btn-bao { background: #1e1b4b; color: #fff; margin-top: 16px; }
+    .tb { padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    .tb:last-child { border-bottom: 0; }
+    .tb-dau { display: flex; justify-content: space-between; gap: 8px; }
+    .tb-loai { font-weight: 700; color: #b45309; }
+    .tb-loai.nghi { color: #991b1b; }
+    .ct { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; margin-top: 4px; }
+    .ct span:nth-child(odd) { color: #6b7280; }
+    .cong { font-size: 13px; color: #374151; font-weight: 600; }
+    .btn-chup { background: #0f766e; color: #fff; margin-top: 12px; }
+    #xemAnh { width: 100%; border-radius: 10px; margin-top: 10px; }
+    header { position: relative; }
+    .chuong { position: absolute; top: 0; right: 0; width: 46px; height: 46px; padding: 0; border-radius: 50%;
+      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); font-size: 22px; }
+    .so-do { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
+      background: #dc2626; color: #fff; font-size: 12px; font-weight: 700; line-height: 20px; }
+    .lop-phu { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 10; display: flex; align-items: flex-start; justify-content: center; padding: 16px; overflow-y: auto; }
+    .lop-phu.hidden { display: none; }
+    .bang-tb { background: #f4f6f9; border-radius: 16px; width: 100%; max-width: 460px; padding: 16px; margin-top: env(safe-area-inset-top); }
+    .bang-tb h2 { font-size: 18px; margin: 0 0 4px; color: #1e1b4b; }
+    .nhom { font-weight: 700; margin: 14px 0 4px; }
+    .nhom.muon { color: #b45309; } .nhom.nghi { color: #991b1b; }
+    .dong-tb { background: #fff; border-radius: 10px; padding: 10px 12px; margin-top: 6px; font-size: 14px; }
   </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <header style="padding-right:56px">
     <img src="logo.png" alt="Logo Thiết bị Nguyễn Trần">
     <div>
       <h1>BẢNG CHẤM CÔNG</h1>
       <div class="cty">Công ty Cổ phần Thương mại và Tư vấn Giải pháp Thiết bị Nguyễn Trần</div>
     </div>
+    <button id="btnChuong" class="chuong hidden" type="button" aria-label="Ai đi muộn, ai nghỉ hôm nay">🔔<span id="soChuong" class="so-do hidden"></span></button>
   </header>
 
   <!-- Đăng nhập -->
@@ -85,17 +115,45 @@
       <div style="text-align:center;margin-top:6px">Xin chào <b id="ten"></b></div>
     </div>
     <div class="card">
+      <b>Thông báo đi muộn / nghỉ</b>
+      <div class="note" style="margin-top:2px">Hôm nay và 14 ngày tới, của cả công ty</div>
+      <div id="dsThongBao" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
       <div class="row">
         <button id="btnVao" class="btn-vao">VÀO</button>
         <button id="btnRa" class="btn-ra">RA</button>
       </div>
-      <label for="ghiChu">Ghi chú (không bắt buộc; nếu đang ở chỗ khách thì phải ghi tên khách hàng)</label>
+      <label for="ghiChu">Ghi chú (nếu đang ở chỗ khách thì phải ghi tên khách hàng)</label>
       <textarea id="ghiChu" placeholder="VD: đi sửa máy tại khách hàng ABC / về sớm vì đi giao hàng"></textarea>
       <div id="msg" class="msg"></div>
+      <div id="khungAnh" class="hidden">
+        <button id="btnChup" class="btn-chup" type="button">📷 Chụp ảnh để chấm công</button>
+        <input id="camera" type="file" accept="image/*" capture="environment" class="hidden">
+      </div>
+      <img id="xemAnh" class="hidden" alt="Ảnh vừa chụp">
     </div>
     <div class="card">
       <b>Hôm nay</b>
       <ul id="dsHomNay"></ul>
+    </div>
+    <div class="card">
+      <b>Báo đi muộn / Xin nghỉ</b>
+      <div class="seg">
+        <button id="segMuon" class="chon" type="button">Đi muộn</button>
+        <button id="segNghi" type="button">Xin nghỉ</button>
+      </div>
+      <div class="hai-cot">
+        <div><label for="bnNgay">Ngày</label><input id="bnNgay" type="date"></div>
+        <div><label for="bnBuoi">Buổi</label>
+          <select id="bnBuoi"><option>Sáng</option><option>Chiều</option><option id="optCaNgay">Cả ngày</option></select></div>
+      </div>
+      <div id="khungDuKien"><label for="bnDuKien">Dự kiến có mặt lúc</label><input id="bnDuKien" type="time"></div>
+      <label for="bnDienGiai">Diễn giải (bắt buộc)</label>
+      <textarea id="bnDienGiai" placeholder="VD: xe hỏng giữa đường / đưa con đi khám"></textarea>
+      <div class="note" style="margin-top:6px">Nội quy: báo đi muộn trước giờ làm ít nhất 15 phút, xin nghỉ đột xuất ít nhất 30 phút. Mọi người trong công ty sẽ thấy thông báo này.</div>
+      <button id="btnBao" class="btn-bao">Gửi báo</button>
+      <div id="msgBao" class="msg"></div>
     </div>
     <div class="card">
       <b>Lịch sử chấm công</b>
@@ -107,6 +165,17 @@
       <div id="dsLichSu" style="margin-top:8px"></div>
     </div>
     <button id="btnThoat" class="link">Đăng xuất</button>
+  </div>
+</div>
+
+<div id="lopTB" class="lop-phu hidden">
+  <div class="bang-tb">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2>Đi muộn / nghỉ hôm nay</h2>
+      <button id="btnDongTB" type="button" style="width:auto;padding:6px 14px;font-size:15px;background:#e5e7eb">Đóng</button>
+    </div>
+    <div class="note" id="ngayTB"></div>
+    <div id="noiDungTB"></div>
   </div>
 </div>
 
@@ -140,7 +209,7 @@
     var trai = document.createElement('span');
     var tag = document.createElement('span');
     tag.className = 'tag ' + b.loai;
-    tag.textContent = b.loai;
+    tag.textContent = b.nhan || b.loai;
     trai.appendChild(tag);
     if (b.noi) { var p = document.createElement('div'); p.className = 'note'; p.textContent = b.noi; trai.appendChild(p); }
     if (b.ghiChu) { var n = document.createElement('div'); n.className = 'note'; n.textContent = b.ghiChu; trai.appendChild(n); }
@@ -160,7 +229,13 @@
   function hienLichSu(kq) {
     var box = $('dsLichSu');
     box.innerHTML = '';
-    if (!kq.ngays.length) { box.innerHTML = '<div class="note">Tháng này chưa có ngày làm việc nào.</div>'; return; }
+    var t = kq.tong;
+    var tong = document.createElement('div');
+    tong.className = 'note';
+    tong.textContent = 'Tổng công: ' + t.cong + ' ngày · muộn có phép ' + t.muonCoPhep + ', không phép ' + (t.muonKhongPhep + t.quaMuonToiDa) +
+      ' · không chấm ' + t.khongCham + ' buổi · làm thêm ' + thoiLuong(t.lamThem);
+    box.appendChild(tong);
+    if (!kq.ngays.length) { var tr = document.createElement('div'); tr.className = 'note'; tr.textContent = 'Tháng này chưa có ngày làm việc nào.'; box.appendChild(tr); return; }
     kq.ngays.forEach(function (ng) {
       var div = document.createElement('div');
       div.className = 'ngay';
@@ -168,22 +243,171 @@
       dau.className = 'ngay-dau';
       var ten = document.createElement('span');
       ten.textContent = ng.thu + ', ' + ng.ngay;
-      dau.appendChild(ten);
-      var cb = document.createElement('span');
+      var cong = document.createElement('span');
+      cong.className = 'cong';
+      cong.textContent = ng.cong ? ng.cong + ' công' : '';
+      dau.appendChild(ten); dau.appendChild(cong);
+      div.appendChild(dau);
+      var ct = document.createElement('div');
+      ct.className = 'ct';
+      function them(nhan, gt) {
+        if (!gt) return;
+        var a = document.createElement('span'); a.textContent = nhan;
+        var b = document.createElement('span'); b.textContent = gt;
+        ct.appendChild(a); ct.appendChild(b);
+      }
+      them('Vào sáng', ng.vaoSang && (ng.vaoSang + (ng.muonSang ? ' · muộn ' + ng.muonSang : '')));
+      them('Vào chiều', ng.vaoChieu && (ng.vaoChieu + (ng.muonChieu ? ' · muộn ' + ng.muonChieu : '')));
+      them('Ra về', ng.ra && (ng.ra + (ng.lamThem ? ' · làm thêm ' + thoiLuong(ng.lamThem) : '')));
+      them('Nơi chấm', ng.noi);
+      them('Đã báo', ng.bao);
+      them('Ghi chú', ng.ghiChu);
+      div.appendChild(ct);
       ng.canhBao.forEach(function (c) {
         var s = document.createElement('span');
-        s.className = 'canh-bao' + (/Chưa|Thiếu/.test(c) ? ' do' : '');
+        s.className = 'canh-bao' + (/Không chấm/.test(c) ? ' do' : '');
         s.textContent = c;
-        s.style.marginLeft = '4px';
-        cb.appendChild(s);
+        s.style.display = 'inline-block'; s.style.margin = '4px 4px 0 0';
+        div.appendChild(s);
       });
-      dau.appendChild(cb);
-      div.appendChild(dau);
-      var ul = document.createElement('ul');
-      ng.luot.forEach(function (b) { ul.appendChild(dongLuot(b)); });
-      div.appendChild(ul);
       box.appendChild(div);
     });
+  }
+
+  function thoiLuong(p) {
+    if (!p) return '0';
+    var g = Math.floor(p / 60), m = p % 60;
+    return (g ? g + ' giờ' : '') + (g && m ? ' ' : '') + (m ? m + ' phút' : '');
+  }
+
+  var dsTB = [];
+
+  function capNhatChuong(ds) {
+    dsTB = ds || [];
+    var n = dsTB.filter(function (b) { return b.laHomNay; }).length;
+    $('btnChuong').classList.remove('hidden');
+    $('soChuong').textContent = n;
+    $('soChuong').classList.toggle('hidden', !n);
+  }
+
+  function dongTB(b) {
+    var div = document.createElement('div');
+    div.className = 'dong-tb';
+    var t = document.createElement('div');
+    var ten = document.createElement('b');
+    ten.textContent = b.hoTen + (b.cuaToi ? ' (bạn)' : '');
+    t.appendChild(ten);
+    t.appendChild(document.createTextNode(' · ' + b.buoi.toLowerCase() + (b.duKien ? ', dự kiến có mặt ' + b.duKien : '')));
+    div.appendChild(t);
+    var dg = document.createElement('div');
+    dg.textContent = b.dienGiai;
+    div.appendChild(dg);
+    var luc = document.createElement('div');
+    luc.className = 'note';
+    luc.textContent = 'Báo lúc ' + b.baoLuc;
+    div.appendChild(luc);
+    return div;
+  }
+
+  function moBangTB() {
+    var box = $('noiDungTB');
+    box.innerHTML = '';
+    $('ngayTB').textContent = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+    var homNay = dsTB.filter(function (b) { return b.laHomNay; });
+    var sapToi = dsTB.filter(function (b) { return !b.laHomNay; });
+    function nhom(tieuDe, lop, ds, rong) {
+      var h = document.createElement('div');
+      h.className = 'nhom ' + lop;
+      h.textContent = tieuDe + ' (' + ds.length + ')';
+      box.appendChild(h);
+      if (!ds.length) { var r = document.createElement('div'); r.className = 'note'; r.textContent = rong; box.appendChild(r); }
+      ds.forEach(function (b) { box.appendChild(dongTB(b)); });
+    }
+    nhom('Xin nghỉ hôm nay', 'nghi', homNay.filter(function (b) { return b.loai === 'Xin nghỉ'; }), 'Không có ai.');
+    nhom('Đi muộn hôm nay', 'muon', homNay.filter(function (b) { return b.loai === 'Đi muộn'; }), 'Không có ai.');
+    if (sapToi.length) {
+      var h = document.createElement('div');
+      h.className = 'nhom';
+      h.textContent = 'Các ngày tới';
+      box.appendChild(h);
+      sapToi.forEach(function (b) {
+        var d = dongTB(b);
+        d.firstChild.insertBefore(document.createTextNode(b.ngay + ' · ' + b.loai + ' · '), d.firstChild.firstChild);
+        box.appendChild(d);
+      });
+    }
+    $('lopTB').classList.remove('hidden');
+    // Lấy lại danh sách mới nhất (có thể vừa có người báo)
+    goi('thongBao', { maNV: phien.maNV, pin: phien.pin })
+      .then(function (kq) {
+        var cu = JSON.stringify(dsTB);
+        hienThongBao(kq.thongBao);
+        if (JSON.stringify(dsTB) !== cu && !$('lopTB').classList.contains('hidden')) moBangTB();
+      })
+      .catch(function () {});
+  }
+
+  function hienThongBao(ds) {
+    capNhatChuong(ds);
+    var box = $('dsThongBao');
+    box.innerHTML = '';
+    if (!ds || !ds.length) { box.innerHTML = '<div class="note">Không có ai báo đi muộn hay nghỉ.</div>'; return; }
+    ds.forEach(function (b) {
+      var div = document.createElement('div');
+      div.className = 'tb';
+      var dau = document.createElement('div');
+      dau.className = 'tb-dau';
+      var trai = document.createElement('span');
+      var loai = document.createElement('span');
+      loai.className = 'tb-loai' + (b.loai === 'Xin nghỉ' ? ' nghi' : '');
+      loai.textContent = b.loai + ' ' + b.buoi.toLowerCase();
+      trai.appendChild(loai);
+      trai.appendChild(document.createTextNode(' · ' + b.hoTen + (b.cuaToi ? ' (bạn)' : '')));
+      var phai = document.createElement('span');
+      phai.className = 'note';
+      phai.textContent = b.ngay;
+      dau.appendChild(trai); dau.appendChild(phai);
+      div.appendChild(dau);
+      var dg = document.createElement('div');
+      dg.className = 'note';
+      dg.textContent = (b.duKien ? 'Dự kiến có mặt ' + b.duKien + ' · ' : '') + b.dienGiai;
+      div.appendChild(dg);
+      box.appendChild(div);
+    });
+  }
+
+  var loaiBao = 'Đi muộn';
+  function chonLoai(loai) {
+    loaiBao = loai;
+    $('segMuon').className = loai === 'Đi muộn' ? 'chon' : '';
+    $('segNghi').className = loai === 'Xin nghỉ' ? 'chon' : '';
+    $('khungDuKien').style.display = loai === 'Đi muộn' ? '' : 'none';
+    $('optCaNgay').disabled = loai === 'Đi muộn';
+    if (loai === 'Đi muộn' && $('bnBuoi').value === 'Cả ngày') $('bnBuoi').value = 'Sáng';
+  }
+
+  function ngayHomNay() {
+    var d = new Date();
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+
+  function guiBao() {
+    var msg = $('msgBao');
+    var dienGiai = $('bnDienGiai').value.trim();
+    if (!$('bnNgay').value) { baoLoi(msg, 'Hãy chọn ngày.', 'err'); return; }
+    if (dienGiai.length < 3) { baoLoi(msg, 'Hãy ghi rõ lý do vào ô diễn giải.', 'err'); return; }
+    $('btnBao').disabled = true;
+    baoLoi(msg, 'Đang gửi...', 'info');
+    goi('baoNghi', { maNV: phien.maNV, pin: phien.pin, loai: loaiBao, ngay: $('bnNgay').value, buoi: $('bnBuoi').value,
+      duKien: $('bnDuKien').value, dienGiai: dienGiai })
+      .then(function (kq) {
+        $('bnDienGiai').value = ''; $('bnDuKien').value = '';
+        var dung = kq.dungHan === 'Đúng hạn';
+        baoLoi(msg, 'Đã gửi (' + kq.baoTruoc.toLowerCase() + ').' + (dung ? '' : ' Lưu ý: báo muộn hơn thời hạn trong nội quy.'), dung ? 'ok' : 'err');
+        hienThongBao(kq.thongBao);
+      })
+      .catch(function (e) { baoLoi(msg, e.message, 'err'); })
+      .then(function () { $('btnBao').disabled = false; });
   }
 
   function xemLichSu() {
@@ -203,6 +427,9 @@
     $('manChamCong').classList.remove('hidden');
     $('ten').textContent = kq.hoTen;
     hienHomNay(kq.homNay);
+    hienThongBao(kq.thongBao);
+    $('bnNgay').value = ngayHomNay();
+    $('bnNgay').min = ngayHomNay();
     chayDongHo();
     if (!window._dongHo) window._dongHo = setInterval(chayDongHo, 1000);
     var d = new Date();
@@ -238,27 +465,72 @@
     });
   }
 
+  var loaiChoAnh = null;
+
   function cham(loai) {
     var msg = $('msg');
     $('btnVao').disabled = $('btnRa').disabled = true;
+    $('khungAnh').classList.add('hidden');
+    $('xemAnh').classList.add('hidden');
     baoLoi(msg, 'Đang lấy vị trí...', 'info');
     layViTri().then(function (viTri) {
-      var ghiChu = $('ghiChu').value.trim();
-      if (!viTri && !ghiChu) {
+      if (!viTri) {
+        // Không có GPS: bắt buộc chụp ảnh tại chỗ. Mở camera phải do người dùng bấm nút.
+        loaiChoAnh = loai;
         $('btnVao').disabled = $('btnRa').disabled = false;
-        baoLoi(msg, 'Không lấy được vị trí. Hãy bật định vị (GPS) và cho phép trình duyệt dùng vị trí rồi bấm lại. Nếu vẫn không được, ghi lý do vào ô ghi chú rồi bấm lại.', 'err');
+        $('btnChup').textContent = '📷 Chụp ảnh để chấm ' + loai;
+        $('khungAnh').classList.remove('hidden');
+        baoLoi(msg, 'Không lấy được vị trí. Bấm nút bên dưới để chụp ảnh nơi bạn đang đứng, ảnh sẽ gửi kèm lượt chấm ' + loai + '.', 'err');
         return;
       }
-      baoLoi(msg, 'Đang ghi nhận...', 'info');
-      goi('chamCong', { maNV: phien.maNV, pin: phien.pin, loai: loai, viTri: viTri, ghiChu: ghiChu })
-        .then(function (kq) {
-          $('ghiChu').value = '';
-          var cuoi = kq.homNay.length ? kq.homNay[kq.homNay.length - 1] : { gio: '', noi: '' };
-          baoLoi(msg, 'Đã chấm ' + loai + ' lúc ' + cuoi.gio + (cuoi.noi ? ' tại ' + cuoi.noi : '') + (viTri ? '' : ' (không có vị trí)') + '.', 'ok');
-          hienHomNay(kq.homNay);
-        })
-        .catch(function (e) { baoLoi(msg, e.message, 'err'); })
-        .then(function () { $('btnVao').disabled = $('btnRa').disabled = false; });
+      guiChamCong(loai, viTri, null);
+    });
+  }
+
+  function guiChamCong(loai, viTri, anh) {
+    var msg = $('msg');
+    $('btnVao').disabled = $('btnRa').disabled = $('btnChup').disabled = true;
+    baoLoi(msg, anh ? 'Đang gửi ảnh và ghi nhận...' : 'Đang ghi nhận...', 'info');
+    goi('chamCong', { maNV: phien.maNV, pin: phien.pin, loai: loai, viTri: viTri, ghiChu: $('ghiChu').value.trim(), anh: anh })
+      .then(function (kq) {
+        $('ghiChu').value = '';
+        $('khungAnh').classList.add('hidden');
+        var cuoi = kq.homNay.length ? kq.homNay[kq.homNay.length - 1] : { gio: '', noi: '' };
+        baoLoi(msg, 'Đã chấm ' + (cuoi.nhan || loai) + ' lúc ' + cuoi.gio + (cuoi.noi ? ' · ' + cuoi.noi : '') + '.', 'ok');
+        hienHomNay(kq.homNay);
+      })
+      .catch(function (e) { baoLoi(msg, e.message, 'err'); })
+      .then(function () { $('btnVao').disabled = $('btnRa').disabled = $('btnChup').disabled = false; });
+  }
+
+  /** Thu nhỏ ảnh (cạnh dài tối đa 1280px), in loại chấm + giờ + họ tên lên góc dưới, trả về JPEG base64. */
+  function nenAnh(file, loai) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var tiLe = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
+        var w = Math.round(img.naturalWidth * tiLe), h = Math.round(img.naturalHeight * tiLe);
+        var cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        var g = cv.getContext('2d');
+        g.drawImage(img, 0, 0, w, h);
+        var d = new Date();
+        var dong1 = loai + ' · ' + d.toLocaleTimeString('vi-VN', { hour12: false }) + ' ' + d.toLocaleDateString('vi-VN');
+        var dong2 = $('ten').textContent;
+        var co = Math.max(16, Math.round(w / 26));
+        g.fillStyle = 'rgba(0,0,0,.55)';
+        g.fillRect(0, h - co * 2.8, w, co * 2.8);
+        g.fillStyle = '#fff';
+        g.font = 'bold ' + co + 'px sans-serif';
+        g.fillText(dong1, co * 0.6, h - co * 1.6);
+        g.font = co + 'px sans-serif';
+        g.fillText(dong2, co * 0.6, h - co * 0.5);
+        URL.revokeObjectURL(url);
+        resolve(cv.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Không đọc được ảnh, hãy chụp lại.')); };
+      img.src = url;
     });
   }
 
@@ -271,9 +543,31 @@
   $('btnVao').onclick = function () { cham('VÀO'); };
   $('btnRa').onclick = function () { cham('RA'); };
   $('btnLichSu').onclick = xemLichSu;
+  $('btnChuong').onclick = moBangTB;
+  $('btnDongTB').onclick = function () { $('lopTB').classList.add('hidden'); };
+  $('lopTB').onclick = function (e) { if (e.target === this) this.classList.add('hidden'); };
+  $('btnChup').onclick = function () { $('camera').click(); };
+  $('camera').onchange = function () {
+    var file = this.files && this.files[0];
+    this.value = '';
+    if (!file || !loaiChoAnh) return;
+    nenAnh(file, loaiChoAnh)
+      .then(function (anh) {
+        $('xemAnh').src = anh;
+        $('xemAnh').classList.remove('hidden');
+        guiChamCong(loaiChoAnh, null, anh);
+      })
+      .catch(function (e) { baoLoi($('msg'), e.message, 'err'); });
+  };
+  $('btnBao').onclick = guiBao;
+  $('segMuon').onclick = function () { chonLoai('Đi muộn'); };
+  $('segNghi').onclick = function () { chonLoai('Xin nghỉ'); };
+  chonLoai('Đi muộn');
   $('btnThoat').onclick = function () {
     luu('cc_maNV', null); luu('cc_pin', null);
     phien = null;
+    $('btnChuong').classList.add('hidden');
+    $('lopTB').classList.add('hidden');
     $('pin').value = ''; $('btnDangNhap').disabled = false; $('msgDangNhap').className = 'msg';
     $('manChamCong').classList.add('hidden');
     $('manDangNhap').classList.remove('hidden');
