@@ -493,7 +493,7 @@
     khongHoTro: 'Trình duyệt này không hỗ trợ định vị. Hãy mở trang chấm công bằng Safari hoặc Chrome, hoặc bấm nút bên dưới để chụp ảnh.',
   };
 
-  var loaiChoAnh = null;
+  var loaiChoAnh = null, viTriChoAnh = null;
 
   function cham(loai) {
     var msg = $('msg');
@@ -505,6 +505,7 @@
       if (!kq.viTri) {
         // Không có vị trí: bắt buộc chụp ảnh tại chỗ. Mở camera phải do người dùng bấm nút.
         loaiChoAnh = loai;
+        viTriChoAnh = null;
         $('btnVao').disabled = $('btnRa').disabled = false;
         $('btnChup').textContent = '📷 Chụp ảnh để chấm ' + loai;
         $('khungAnh').classList.remove('hidden');
@@ -527,7 +528,18 @@
         baoLoi(msg, 'Đã chấm ' + (cuoi.nhan || loai) + ' lúc ' + cuoi.gio + (cuoi.noi ? ' · ' + cuoi.noi : '') + '.', 'ok');
         hienHomNay(kq.homNay);
       })
-      .catch(function (e) { baoLoi(msg, e.message, 'err'); })
+      .catch(function (e) {
+        if (/^\[CAN_ANH\]/.test(e.message)) {
+          // Ở ngoài văn phòng/kho: giữ vị trí vừa lấy, chờ chụp ảnh rồi gửi lại
+          loaiChoAnh = loai;
+          viTriChoAnh = viTri;
+          $('btnChup').textContent = '📷 Chụp ảnh để chấm ' + loai;
+          $('khungAnh').classList.remove('hidden');
+          baoLoi(msg, e.message.replace(/^\[CAN_ANH\]\s*/, ''), 'err');
+        } else {
+          baoLoi(msg, e.message, 'err');
+        }
+      })
       .then(function () { $('btnVao').disabled = $('btnRa').disabled = $('btnChup').disabled = false; });
   }
 
@@ -583,7 +595,7 @@
       .then(function (anh) {
         $('xemAnh').src = anh;
         $('xemAnh').classList.remove('hidden');
-        guiChamCong(loaiChoAnh, null, anh);
+        guiChamCong(loaiChoAnh, viTriChoAnh, anh);
       })
       .catch(function (e) { baoLoi($('msg'), e.message, 'err'); });
   };
