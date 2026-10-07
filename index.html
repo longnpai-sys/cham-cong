@@ -33,7 +33,7 @@
     .btn-ra { background: #ea580c; color: #fff; font-size: 22px; padding: 26px 0; }
     .clock { font-size: 40px; font-weight: 700; text-align: center; letter-spacing: 1px; }
     .date { text-align: center; color: #6b7280; margin-bottom: 4px; }
-    .msg { padding: 12px; border-radius: 10px; font-size: 15px; margin-top: 12px; display: none; }
+    .msg { padding: 12px; border-radius: 10px; font-size: 15px; margin-top: 12px; display: none; white-space: pre-line; }
     .msg.ok { background: #dcfce7; color: #166534; display: block; }
     .msg.err { background: #fee2e2; color: #991b1b; display: block; }
     .msg.info { background: #e0e7ff; color: #3730a3; display: block; }
@@ -458,16 +458,40 @@
       });
   }
 
-  function layViTri() {
-    return new Promise(function (resolve) {
-      if (!navigator.geolocation) return resolve(null);
-      navigator.geolocation.getCurrentPosition(
-        function (p) { resolve({ lat: p.coords.latitude, lng: p.coords.longitude, saiSo: p.coords.accuracy }); },
-        function () { resolve(null); },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-      );
+  /**
+   * Lấy vị trí: thử GPS chính xác trước, GPS yếu thì thử lại bằng wifi/sóng điện thoại.
+   * Trả về { viTri } hoặc { loi: 'chan' (điện thoại chặn quyền) | 'yeu' (không bắt được tín hiệu) | 'khongHoTro' }.
+   */
+  function layViTri(khiThuLai) {
+    function hoi(tuyChon) {
+      return new Promise(function (resolve) {
+        navigator.geolocation.getCurrentPosition(
+          function (p) { resolve({ viTri: { lat: p.coords.latitude, lng: p.coords.longitude, saiSo: p.coords.accuracy } }); },
+          function (e) { resolve({ ma: e.code }); },
+          tuyChon);
+      });
+    }
+    if (!navigator.geolocation) return Promise.resolve({ loi: 'khongHoTro' });
+    return hoi({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }).then(function (kq) {
+      if (kq.viTri) return kq;
+      if (kq.ma === 1) return { loi: 'chan' };
+      if (khiThuLai) khiThuLai();
+      return hoi({ enableHighAccuracy: false, timeout: 10000, maximumAge: 120000 }).then(function (kq2) {
+        if (kq2.viTri) return kq2;
+        return { loi: kq2.ma === 1 ? 'chan' : 'yeu' };
+      });
     });
   }
+
+  var LOI_VI_TRI = {
+    chan: 'Điện thoại đang CHẶN quyền vị trí nên không định vị được.\n' +
+      '• iPhone: Cài đặt → Quyền riêng tư & Bảo mật → Dịch vụ định vị → bật. Kéo xuống chọn Chrome (hoặc Trang web Safari) → "Khi dùng ứng dụng", bật "Vị trí chính xác".\n' +
+      '• Android: Cài đặt → Vị trí → bật; Chrome → Quyền → Vị trí → Cho phép.\n' +
+      'Sau đó tắt hẳn ứng dụng chấm công, mở lại và bấm lại. Cần chấm ngay thì bấm nút chụp ảnh bên dưới.',
+    yeu: 'Không bắt được tín hiệu định vị (thường do đang ở trong nhà kín, tầng hầm, kho).\n' +
+      'Hãy ra gần cửa sổ hoặc ra ngoài trời rồi bấm lại, hoặc bấm nút bên dưới để chụp ảnh nơi bạn đang đứng.',
+    khongHoTro: 'Trình duyệt này không hỗ trợ định vị. Hãy mở trang chấm công bằng Safari hoặc Chrome, hoặc bấm nút bên dưới để chụp ảnh.',
+  };
 
   var loaiChoAnh = null;
 
@@ -477,17 +501,17 @@
     $('khungAnh').classList.add('hidden');
     $('xemAnh').classList.add('hidden');
     baoLoi(msg, 'Đang lấy vị trí...', 'info');
-    layViTri().then(function (viTri) {
-      if (!viTri) {
-        // Không có GPS: bắt buộc chụp ảnh tại chỗ. Mở camera phải do người dùng bấm nút.
+    layViTri(function () { baoLoi(msg, 'GPS yếu, đang thử định vị bằng wifi / sóng điện thoại...', 'info'); }).then(function (kq) {
+      if (!kq.viTri) {
+        // Không có vị trí: bắt buộc chụp ảnh tại chỗ. Mở camera phải do người dùng bấm nút.
         loaiChoAnh = loai;
         $('btnVao').disabled = $('btnRa').disabled = false;
         $('btnChup').textContent = '📷 Chụp ảnh để chấm ' + loai;
         $('khungAnh').classList.remove('hidden');
-        baoLoi(msg, 'Không lấy được vị trí. Bấm nút bên dưới để chụp ảnh nơi bạn đang đứng, ảnh sẽ gửi kèm lượt chấm ' + loai + '.', 'err');
+        baoLoi(msg, LOI_VI_TRI[kq.loi], 'err');
         return;
       }
-      guiChamCong(loai, viTri, null);
+      guiChamCong(loai, kq.viTri, null);
     });
   }
 
