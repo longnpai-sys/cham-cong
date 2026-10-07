@@ -86,6 +86,10 @@
     .bang-tb h2 { font-size: 18px; margin: 0 0 4px; color: #1e1b4b; }
     .nhom { font-weight: 700; margin: 14px 0 4px; }
     .nhom.muon { color: #b45309; } .nhom.nghi { color: #991b1b; }
+    .the-xem { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; margin-top: 12px; }
+    .the-xem h3 { margin: 0 0 2px; font-size: 16px; color: #1e1b4b; }
+    .the-xem a { color: #2563eb; }
+    .luot-xem { border-top: 1px solid #e5e7eb; padding: 8px 0 2px; font-size: 14px; }
     .dong-tb { background: #fff; border-radius: 10px; padding: 10px 12px; margin-top: 6px; font-size: 14px; }
   </style>
 </head>
@@ -158,6 +162,17 @@
       <div class="note" style="margin-top:6px">Nội quy: báo đi muộn trước giờ làm ít nhất 15 phút, xin nghỉ đột xuất ít nhất 30 phút. Mọi người trong công ty sẽ thấy thông báo này.</div>
       <button id="btnBao" class="btn-bao">Gửi báo</button>
       <div id="msgBao" class="msg"></div>
+    </div>
+    <div id="theQuanTri" class="card hidden">
+      <b>Xem chấm công nhân viên</b>
+      <div class="note" style="margin-top:2px">Chỉ người quản trị thấy mục này</div>
+      <label for="qtNV">Nhân viên</label>
+      <select id="qtNV"></select>
+      <label for="qtNgay">Ngày</label>
+      <input id="qtNgay" type="date">
+      <button id="btnQtXem" class="btn-bao">Xem</button>
+      <div id="msgQt" class="msg"></div>
+      <div id="kqQt"></div>
     </div>
     <div class="card">
       <b>Lịch sử chấm công</b>
@@ -351,6 +366,89 @@
       .catch(function () {});
   }
 
+  function xemNgayQuanTri() {
+    var msg = $('msgQt');
+    if (!$('qtNgay').value) { baoLoi(msg, 'Hãy chọn ngày.', 'err'); return; }
+    $('btnQtXem').disabled = true;
+    $('kqQt').innerHTML = '';
+    baoLoi(msg, 'Đang tải...', 'info');
+    goi('xemNgay', { maNV: phien.maNV, pin: phien.pin, maXem: $('qtNV').value, ngay: $('qtNgay').value })
+      .then(function (kq) { $('msgQt').className = 'msg'; hienXemNgay(kq); })
+      .catch(function (e) { baoLoi(msg, e.message, 'err'); })
+      .then(function () { $('btnQtXem').disabled = false; });
+  }
+
+  function hienXemNgay(kq) {
+    var box = $('kqQt');
+    var the = document.createElement('div');
+    the.className = 'the-xem';
+    var h = document.createElement('h3');
+    h.textContent = kq.hoTen + ' · ' + kq.ngay;
+    the.appendChild(h);
+    if (kq.boPhan || kq.chucVu) {
+      var bp = document.createElement('div'); bp.className = 'note';
+      bp.textContent = [kq.boPhan, kq.chucVu].filter(function (x) { return x; }).join(' · ');
+      the.appendChild(bp);
+    }
+    var d = kq.dong;
+    if (!d && !kq.luot.length && !kq.bao.length) {
+      var r = document.createElement('div'); r.className = 'note'; r.style.marginTop = '8px';
+      r.textContent = 'Ngày nghỉ hoặc trước ngày áp dụng, không có lượt chấm nào.';
+      the.appendChild(r); box.appendChild(the); return;
+    }
+    if (d) {
+      var ct = document.createElement('div'); ct.className = 'ct'; ct.style.marginTop = '8px';
+      function them(nhan, gt) {
+        if (!gt) return;
+        var a = document.createElement('span'); a.textContent = nhan;
+        var b = document.createElement('span'); b.textContent = gt;
+        ct.appendChild(a); ct.appendChild(b);
+      }
+      them('Vào sáng', d.vaoSang ? d.vaoSang + (d.muonSang ? ' · muộn ' + d.muonSang : ' · đúng giờ') : 'chưa chấm');
+      them('Vào chiều', d.vaoChieu ? d.vaoChieu + (d.muonChieu ? ' · muộn ' + d.muonChieu : ' · đúng giờ') : 'chưa chấm');
+      them('Ra về', d.ra ? d.ra + (d.lamThem ? ' · làm thêm ' + thoiLuong(d.lamThem) : '') : 'chưa chấm');
+      them('Công', String(d.cong || 0));
+      the.appendChild(ct);
+      d.canhBao.forEach(function (c) {
+        var sp = document.createElement('span');
+        sp.className = 'canh-bao' + (/Không chấm/.test(c) ? ' do' : '');
+        sp.textContent = c; sp.style.display = 'inline-block'; sp.style.margin = '6px 4px 0 0';
+        the.appendChild(sp);
+      });
+    }
+    kq.bao.forEach(function (b) {
+      var div = document.createElement('div'); div.className = 'luot-xem';
+      var t = document.createElement('div');
+      var dam = document.createElement('b'); dam.textContent = b.loai + ' ' + b.buoi.toLowerCase();
+      t.appendChild(dam);
+      t.appendChild(document.createTextNode((b.duKien ? ' · dự kiến có mặt ' + b.duKien : '') + (b.dungHan ? '' : ' · báo trễ')));
+      div.appendChild(t);
+      var dg = document.createElement('div'); dg.textContent = b.dienGiai; div.appendChild(dg);
+      var luc = document.createElement('div'); luc.className = 'note'; luc.textContent = 'Báo lúc ' + b.baoLuc; div.appendChild(luc);
+      the.appendChild(div);
+    });
+    kq.luot.forEach(function (l) {
+      var div = document.createElement('div'); div.className = 'luot-xem';
+      var t = document.createElement('div');
+      var dam = document.createElement('b'); dam.textContent = l.loai + ' ' + l.gio;
+      t.appendChild(dam);
+      if (l.noi) t.appendChild(document.createTextNode(' · ' + l.noi));
+      div.appendChild(t);
+      if (l.ghiChu) { var g = document.createElement('div'); g.textContent = l.ghiChu; div.appendChild(g); }
+      var lk = document.createElement('div');
+      function link(nhan, url) {
+        if (!/^https:\/\//.test(url)) return;
+        var a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = nhan;
+        a.style.marginRight = '14px'; lk.appendChild(a);
+      }
+      link('Xem bản đồ', l.banDo);
+      link('Xem ảnh', l.anh);
+      if (lk.childNodes.length) div.appendChild(lk);
+      the.appendChild(div);
+    });
+    box.appendChild(the);
+  }
+
   function hienThongBao(ds) {
     capNhatChuong(ds);
     var box = $('dsThongBao');
@@ -432,6 +530,16 @@
     $('ten').textContent = kq.hoTen;
     hienHomNay(kq.homNay);
     hienThongBao(kq.thongBao);
+    $('theQuanTri').classList.toggle('hidden', !kq.laQuanTri);
+    if (kq.laQuanTri) {
+      $('qtNV').innerHTML = '';
+      (kq.dsNV || []).forEach(function (x) {
+        var o = document.createElement('option'); o.value = x.maNV; o.textContent = x.hoTen; $('qtNV').appendChild(o);
+      });
+      $('qtNgay').value = ngayHomNay();
+      $('qtNgay').max = ngayHomNay();
+      $('kqQt').innerHTML = '';
+    }
     $('bnNgay').value = ngayHomNay();
     $('bnNgay').min = ngayHomNay();
     chayDongHo();
@@ -583,6 +691,7 @@
   $('btnVao').onclick = function () { cham('VÀO'); };
   $('btnRa').onclick = function () { cham('RA'); };
   $('btnLichSu').onclick = xemLichSu;
+  $('btnQtXem').onclick = xemNgayQuanTri;
   $('btnChuong').onclick = moBangTB;
   $('btnDongTB').onclick = function () { $('lopTB').classList.add('hidden'); };
   $('lopTB').onclick = function (e) { if (e.target === this) this.classList.add('hidden'); };
@@ -607,6 +716,7 @@
     luu('cc_maNV', null); luu('cc_pin', null);
     phien = null;
     $('btnChuong').classList.add('hidden');
+    $('theQuanTri').classList.add('hidden');
     $('lopTB').classList.add('hidden');
     $('pin').value = ''; $('btnDangNhap').disabled = false; $('msgDangNhap').className = 'msg';
     $('manChamCong').classList.add('hidden');
