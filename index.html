@@ -91,6 +91,22 @@
     .the-xem a { color: #2563eb; }
     .luot-xem { border-top: 1px solid #e5e7eb; padding: 8px 0 2px; font-size: 14px; }
     .dong-tb { background: #fff; border-radius: 10px; padding: 10px 12px; margin-top: 6px; font-size: 14px; }
+    .tl { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid #eef0f3; }
+    .tl-icon { flex-shrink: 0; width: 40px; height: 40px; border-radius: 8px; color: #fff; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; text-transform: uppercase; background: #6b7280; }
+    .tl-icon.pdf { background: #dc2626; } .tl-icon.doc, .tl-icon.docx { background: #2563eb; }
+    .tl-icon.xls, .tl-icon.xlsx { background: #16a34a; } .tl-icon.ppt, .tl-icon.pptx { background: #ea580c; }
+    .tl-ten { color: #1e1b4b; font-weight: 600; text-decoration: none; font-size: 15px; }
+    .tl-go { width: auto; flex-shrink: 0; margin-left: auto; padding: 6px 10px; font-size: 13px; font-weight: 500; background: #f3f4f6; color: #991b1b; }
+    .moi { font-size: 11px; font-weight: 700; color: #fff; background: #dc2626; border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: 2px; }
+    input[type=file] { width: 100%; font-size: 15px; }
+    .xn-nut { margin-top: 8px; padding: 10px; font-size: 15px; background: #16a34a; color: #fff; }
+    .xn-ok { color: #166534; font-size: 13px; font-weight: 600; margin-top: 4px; }
+    .xn-cho { color: #b45309; font-size: 13px; margin-top: 4px; }
+    .xn-tk { display: block; width: fit-content; margin-top: 6px; font-size: 13px; font-weight: 600; color: #2563eb; cursor: pointer; }
+    .xn-ds { font-size: 13px; margin-top: 6px; background: #f8fafc; border-radius: 8px; padding: 8px 10px; }
+    .xn-ds .chua { color: #991b1b; }
+    .nhac-doc { background: #fef3c7; color: #92400e; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; font-size: 15px; font-weight: 600; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -117,6 +133,7 @@
 
   <!-- Chấm công -->
   <div id="manChamCong" class="hidden">
+    <div id="nhacDoc" class="nhac-doc hidden"></div>
     <div class="card">
       <div class="date" id="ngay"></div>
       <div class="clock" id="dongHo">--:--:--</div>
@@ -163,6 +180,25 @@
       <button id="btnBao" class="btn-bao">Gửi báo</button>
       <div id="msgBao" class="msg"></div>
     </div>
+    <div class="card">
+      <b>Tài liệu công ty</b>
+      <div class="note" style="margin-top:2px">Nội quy, quy định, quy trình... Chạm vào tên để mở.</div>
+      <div id="dsTaiLieu" style="margin-top:8px"></div>
+      <div id="themTL" class="the-xem hidden">
+        <b>Thêm tài liệu</b> <span class="note">· chỉ người quản trị thấy</span>
+        <label for="tlFile">Chọn file (PDF, Word, Excel, PowerPoint, ảnh; tối đa 10 MB)</label>
+        <input id="tlFile" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png">
+        <label for="tlTen">Tên tài liệu</label>
+        <input id="tlTen" type="text" maxlength="150" placeholder="VD: Nội quy công ty 2026">
+        <label for="tlNhom">Nhóm</label>
+        <select id="tlNhom"><option>Nội quy – Quy định</option><option>Quy trình</option><option>Khen thưởng – Kỷ luật</option><option>Biểu mẫu</option><option>Khác</option></select>
+        <label for="tlAiXem">Ai được xem</label>
+        <select id="tlAiXem"><option>Tất cả nhân viên</option><option>Chỉ quản trị</option></select>
+        <label class="check" id="dongXN"><input type="checkbox" id="tlXacNhan" checked> Yêu cầu nhân viên xác nhận đã đọc</label>
+        <button id="btnTL" class="btn-bao">Tải lên</button>
+        <div id="msgTL" class="msg"></div>
+      </div>
+    </div>
     <div id="theQuanTri" class="card hidden">
       <b>Xem chấm công nhân viên</b>
       <div class="note" style="margin-top:2px">Chỉ người quản trị thấy mục này</div>
@@ -203,6 +239,7 @@
   var API = 'https://script.google.com/macros/s/AKfycbwI8WRxjAk2DlkSIUjPUTbJTvsF0RMwSz5w4bI1Nod-SEWY-i3cFYPyH41YsA7Gc9L7/exec';
 
   var phien = null; // {maNV, pin}
+  var laQuanTri = false;
   var $ = function (id) { return document.getElementById(id); };
 
   function luu(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
@@ -449,6 +486,125 @@
     box.appendChild(the);
   }
 
+  function hienTaiLieu(ds) {
+    var box = $('dsTaiLieu');
+    box.innerHTML = '';
+    var canDoc = (ds || []).filter(function (x) { return x.canXacNhan && !x.daXacNhan; }).length;
+    $('nhacDoc').textContent = '📄 Bạn có ' + canDoc + ' tài liệu cần đọc và xác nhận. Chạm để xem.';
+    $('nhacDoc').classList.toggle('hidden', !canDoc);
+    if (!ds || !ds.length) {
+      var r = document.createElement('div'); r.className = 'note'; r.textContent = 'Chưa có tài liệu nào.';
+      box.appendChild(r); return;
+    }
+    var nhomTruoc = null;
+    ds.forEach(function (x) {
+      if (x.nhom !== nhomTruoc) {
+        var h = document.createElement('div'); h.className = 'nhom'; h.textContent = x.nhom;
+        box.appendChild(h); nhomTruoc = x.nhom;
+      }
+      var dong = document.createElement('div'); dong.className = 'tl';
+      var ic = document.createElement('div'); ic.className = 'tl-icon ' + x.loai; ic.textContent = x.loai;
+      dong.appendChild(ic);
+      var giua = document.createElement('div'); giua.style.minWidth = '0';
+      var a = document.createElement('a'); a.className = 'tl-ten'; a.textContent = x.ten;
+      if (/^https:\/\//.test(x.link)) { a.href = x.link; a.target = '_blank'; a.rel = 'noopener'; }
+      giua.appendChild(a);
+      if (x.moi) { var m = document.createElement('span'); m.className = 'moi'; m.textContent = 'Mới'; giua.appendChild(m); }
+      var n = document.createElement('div'); n.className = 'note';
+      n.textContent = 'Đăng ' + x.ngay + (x.aiXem === 'Chỉ quản trị' ? ' · chỉ quản trị xem' : '');
+      giua.appendChild(n);
+      if (x.canXacNhan) veXacNhan(giua, x, a);
+      dong.appendChild(giua);
+      if (laQuanTri) {
+        var go = document.createElement('button'); go.className = 'tl-go'; go.textContent = 'Gỡ';
+        go.onclick = function () { goTaiLieu(x, go); };
+        dong.appendChild(go);
+      }
+      box.appendChild(dong);
+    });
+  }
+
+  var daMo = {}; // tài liệu đã bấm mở trong lần dùng này
+
+  function veXacNhan(giua, x, a) {
+    if (x.daXacNhan) {
+      var ok = document.createElement('div'); ok.className = 'xn-ok';
+      ok.textContent = '✓ Bạn đã xác nhận đọc lúc ' + x.daXacNhan;
+      giua.appendChild(ok);
+    } else {
+      var cho = document.createElement('div'); cho.className = 'xn-cho';
+      cho.textContent = daMo[x.id] ? 'Đọc xong thì bấm nút dưới đây.' : 'Cần đọc và xác nhận: chạm vào tên tài liệu để mở ra đọc trước.';
+      var nut = document.createElement('button'); nut.className = 'xn-nut'; nut.textContent = 'Tôi đã đọc và hiểu';
+      nut.disabled = !daMo[x.id];
+      a.addEventListener('click', function () {
+        daMo[x.id] = true; nut.disabled = false; cho.textContent = 'Đọc xong thì bấm nút dưới đây.';
+      });
+      nut.onclick = function () { xacNhanDoc(x, nut); };
+      giua.appendChild(cho); giua.appendChild(nut);
+    }
+    if (x.daDoc) {
+      var tong = x.daDoc.length + x.chuaDoc.length;
+      var tk = document.createElement('span'); tk.className = 'xn-tk';
+      tk.textContent = 'Đã đọc ' + x.daDoc.length + '/' + tong + ' người · xem chi tiết';
+      var ds = document.createElement('div'); ds.className = 'xn-ds hidden';
+      if (x.daDoc.length) {
+        var h1 = document.createElement('b'); h1.textContent = 'Đã đọc (' + x.daDoc.length + ')'; ds.appendChild(h1);
+        x.daDoc.forEach(function (d) {
+          var r = document.createElement('div'); r.textContent = '✓ ' + d.hoTen + (d.luc ? ' · ' + d.luc : ''); ds.appendChild(r);
+        });
+      }
+      if (x.chuaDoc.length) {
+        var h2 = document.createElement('b'); h2.className = 'chua'; h2.textContent = 'Chưa đọc (' + x.chuaDoc.length + ')';
+        h2.style.display = 'block'; h2.style.marginTop = x.daDoc.length ? '6px' : '0'; ds.appendChild(h2);
+        x.chuaDoc.forEach(function (t) {
+          var r = document.createElement('div'); r.className = 'chua'; r.textContent = '✗ ' + t; ds.appendChild(r);
+        });
+      }
+      tk.onclick = function () { ds.classList.toggle('hidden'); };
+      giua.appendChild(tk); giua.appendChild(ds);
+    }
+  }
+
+  function xacNhanDoc(x, nut) {
+    nut.disabled = true;
+    nut.textContent = 'Đang gửi...';
+    goi('xacNhanDoc', { maNV: phien.maNV, pin: phien.pin, id: x.id })
+      .then(function (kq) { hienTaiLieu(kq.taiLieu); })
+      .catch(function (e) { nut.disabled = false; nut.textContent = 'Tôi đã đọc và hiểu'; alert(e.message); });
+  }
+
+  function goTaiLieu(x, nut) {
+    if (!confirm('Gỡ tài liệu "' + x.ten + '"? Mọi người sẽ không xem được nữa.')) return;
+    nut.disabled = true;
+    goi('goTaiLieu', { maNV: phien.maNV, pin: phien.pin, id: x.id })
+      .then(function (kq) { hienTaiLieu(kq.taiLieu); })
+      .catch(function (e) { nut.disabled = false; alert(e.message); });
+  }
+
+  function taiLenTaiLieu() {
+    var msg = $('msgTL'), f = $('tlFile').files && $('tlFile').files[0];
+    if (!f) { baoLoi(msg, 'Hãy chọn file.', 'err'); return; }
+    if (!$('tlTen').value.trim()) { baoLoi(msg, 'Hãy nhập tên tài liệu.', 'err'); return; }
+    if (f.size > 10 * 1024 * 1024) { baoLoi(msg, 'File lớn quá 10 MB. Hãy lưu lại thành PDF nhỏ hơn.', 'err'); return; }
+    $('btnTL').disabled = true;
+    baoLoi(msg, 'Đang tải lên, vui lòng chờ...', 'info');
+    var rd = new FileReader();
+    rd.onerror = function () { $('btnTL').disabled = false; baoLoi(msg, 'Không đọc được file này.', 'err'); };
+    rd.onload = function () {
+      goi('themTaiLieu', { maNV: phien.maNV, pin: phien.pin, ten: $('tlTen').value.trim(), nhom: $('tlNhom').value,
+        aiXem: $('tlAiXem').value, tenFile: f.name, duLieu: rd.result,
+        canXacNhan: $('tlXacNhan').checked && $('tlAiXem').value === 'Tất cả nhân viên' })
+        .then(function (kq) {
+          hienTaiLieu(kq.taiLieu);
+          $('tlFile').value = ''; $('tlTen').value = '';
+          baoLoi(msg, 'Đã tải lên.', 'ok');
+        })
+        .catch(function (e) { baoLoi(msg, e.message, 'err'); })
+        .then(function () { $('btnTL').disabled = false; });
+    };
+    rd.readAsDataURL(f);
+  }
+
   function hienThongBao(ds) {
     capNhatChuong(ds);
     var box = $('dsThongBao');
@@ -531,6 +687,10 @@
     hienHomNay(kq.homNay);
     hienThongBao(kq.thongBao);
     $('theQuanTri').classList.toggle('hidden', !kq.laQuanTri);
+    laQuanTri = !!kq.laQuanTri;
+    $('themTL').classList.toggle('hidden', !laQuanTri);
+    $('msgTL').className = 'msg';
+    hienTaiLieu(kq.taiLieu);
     if (kq.laQuanTri) {
       $('qtNV').innerHTML = '';
       (kq.dsNV || []).forEach(function (x) {
@@ -692,6 +852,13 @@
   $('btnRa').onclick = function () { cham('RA'); };
   $('btnLichSu').onclick = xemLichSu;
   $('btnQtXem').onclick = xemNgayQuanTri;
+  $('btnTL').onclick = taiLenTaiLieu;
+  $('nhacDoc').onclick = function () { $('dsTaiLieu').scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+  $('tlAiXem').onchange = function () { $('dongXN').classList.toggle('hidden', this.value !== 'Tất cả nhân viên'); };
+  $('tlFile').onchange = function () {
+    var f = this.files && this.files[0];
+    if (f && !$('tlTen').value.trim()) $('tlTen').value = f.name.replace(/\.[^.]+$/, '');
+  };
   $('btnChuong').onclick = moBangTB;
   $('btnDongTB').onclick = function () { $('lopTB').classList.add('hidden'); };
   $('lopTB').onclick = function (e) { if (e.target === this) this.classList.add('hidden'); };
@@ -717,6 +884,10 @@
     phien = null;
     $('btnChuong').classList.add('hidden');
     $('theQuanTri').classList.add('hidden');
+    $('themTL').classList.add('hidden');
+    laQuanTri = false;
+    $('dsTaiLieu').innerHTML = '';
+    $('nhacDoc').classList.add('hidden');
     $('lopTB').classList.add('hidden');
     $('pin').value = ''; $('btnDangNhap').disabled = false; $('msgDangNhap').className = 'msg';
     $('manChamCong').classList.add('hidden');
