@@ -154,7 +154,6 @@
       <div id="msg" class="msg"></div>
       <div id="khungAnh" class="hidden">
         <button id="btnChup" class="btn-chup" type="button">📷 Chụp ảnh để chấm công</button>
-        <input id="camera" type="file" accept="image/*" capture="environment" class="hidden">
       </div>
       <img id="xemAnh" class="hidden" alt="Ảnh vừa chụp">
     </div>
@@ -220,6 +219,18 @@
       <div id="dsLichSu" style="margin-top:8px"></div>
     </div>
     <button id="btnThoat" class="link">Đăng xuất</button>
+  </div>
+</div>
+
+<div id="lopCam" class="lop-phu hidden">
+  <div class="bang-tb">
+    <b id="tieuDeCam">Chụp ảnh tại chỗ</b>
+    <div class="note">Hướng camera vào nơi bạn đang đứng (cửa hàng, biển hiệu, máy đang sửa...)</div>
+    <video id="camVideo" playsinline autoplay muted style="width:100%;border-radius:10px;margin-top:10px;background:#000;min-height:200px"></video>
+    <div class="row" style="margin-top:12px">
+      <button id="btnHuyCam" type="button" style="background:#e5e7eb">Hủy</button>
+      <button id="btnChupCam" type="button" class="btn-chup" style="margin-top:0">📷 Chụp</button>
+    </div>
   </div>
 </div>
 
@@ -812,34 +823,70 @@
   }
 
   /** Thu nhỏ ảnh (cạnh dài tối đa 1280px), in loại chấm + giờ + họ tên lên góc dưới, trả về JPEG base64. */
-  function nenAnh(file, loai) {
-    return new Promise(function (resolve, reject) {
-      var url = URL.createObjectURL(file);
-      var img = new Image();
-      img.onload = function () {
-        var tiLe = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
-        var w = Math.round(img.naturalWidth * tiLe), h = Math.round(img.naturalHeight * tiLe);
-        var cv = document.createElement('canvas');
-        cv.width = w; cv.height = h;
-        var g = cv.getContext('2d');
-        g.drawImage(img, 0, 0, w, h);
-        var d = new Date();
-        var dong1 = loai + ' · ' + d.toLocaleTimeString('vi-VN', { hour12: false }) + ' ' + d.toLocaleDateString('vi-VN');
-        var dong2 = $('ten').textContent;
-        var co = Math.max(16, Math.round(w / 26));
-        g.fillStyle = 'rgba(0,0,0,.55)';
-        g.fillRect(0, h - co * 2.8, w, co * 2.8);
-        g.fillStyle = '#fff';
-        g.font = 'bold ' + co + 'px sans-serif';
-        g.fillText(dong1, co * 0.6, h - co * 1.6);
-        g.font = co + 'px sans-serif';
-        g.fillText(dong2, co * 0.6, h - co * 0.5);
-        URL.revokeObjectURL(url);
-        resolve(cv.toDataURL('image/jpeg', 0.7));
-      };
-      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Không đọc được ảnh, hãy chụp lại.')); };
-      img.src = url;
-    });
+  /**
+   * Chụp ảnh trực tiếp từ camera ngay trên trang (không cho chọn ảnh có sẵn trong máy).
+   * Ảnh được thu nhỏ còn tối đa 1280px và in loại chấm, giờ, tên người chấm lên góc dưới.
+   */
+  var luongCam = null;
+
+  function moCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      baoLoi($('msg'), 'Trình duyệt này không mở được camera. Hãy chấm công bằng Chrome hoặc Safari trên điện thoại.', 'err');
+      return;
+    }
+    $('btnChup').disabled = true;
+    $('tieuDeCam').textContent = 'Chụp ảnh để chấm ' + loaiChoAnh;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false })
+      .then(function (luong) {
+        luongCam = luong;
+        $('camVideo').srcObject = luong;
+        $('lopCam').classList.remove('hidden');
+        var p = $('camVideo').play();
+        if (p && p.catch) p.catch(function () {});
+      })
+      .catch(function (e) {
+        var ly = e && e.name === 'NotAllowedError'
+          ? 'Bạn đã chặn quyền dùng camera. Vào cài đặt trình duyệt, cho phép trang này dùng Camera rồi thử lại.'
+          : e && (e.name === 'NotFoundError' || e.name === 'OverconstrainedError')
+            ? 'Máy này không có camera. Hãy chấm công bằng điện thoại.'
+            : 'Không mở được camera (' + (e && e.message || 'lỗi không rõ') + '). Đóng các ứng dụng đang dùng camera rồi thử lại.';
+        baoLoi($('msg'), ly, 'err');
+      })
+      .then(function () { $('btnChup').disabled = false; });
+  }
+
+  function tatCamera() {
+    if (luongCam) luongCam.getTracks().forEach(function (t) { t.stop(); });
+    luongCam = null;
+    $('camVideo').srcObject = null;
+    $('lopCam').classList.add('hidden');
+  }
+
+  function chupTuCamera() {
+    var v = $('camVideo');
+    if (!v.videoWidth) { return; } // camera chưa lên hình
+    var tiLe = Math.min(1, 1280 / Math.max(v.videoWidth, v.videoHeight));
+    var w = Math.round(v.videoWidth * tiLe), h = Math.round(v.videoHeight * tiLe);
+    var cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    var g = cv.getContext('2d');
+    g.drawImage(v, 0, 0, w, h);
+    var d = new Date();
+    var dong1 = loaiChoAnh + ' · ' + d.toLocaleTimeString('vi-VN', { hour12: false }) + ' ' + d.toLocaleDateString('vi-VN');
+    var dong2 = $('ten').textContent;
+    var co = Math.max(16, Math.round(w / 26));
+    g.fillStyle = 'rgba(0,0,0,.55)';
+    g.fillRect(0, h - co * 2.8, w, co * 2.8);
+    g.fillStyle = '#fff';
+    g.font = 'bold ' + co + 'px sans-serif';
+    g.fillText(dong1, co * 0.6, h - co * 1.6);
+    g.font = co + 'px sans-serif';
+    g.fillText(dong2, co * 0.6, h - co * 0.5);
+    var anh = cv.toDataURL('image/jpeg', 0.7);
+    tatCamera();
+    $('xemAnh').src = anh;
+    $('xemAnh').classList.remove('hidden');
+    guiChamCong(loaiChoAnh, viTriChoAnh, anh);
   }
 
   $('btnDangNhap').onclick = function () {
@@ -862,19 +909,9 @@
   $('btnChuong').onclick = moBangTB;
   $('btnDongTB').onclick = function () { $('lopTB').classList.add('hidden'); };
   $('lopTB').onclick = function (e) { if (e.target === this) this.classList.add('hidden'); };
-  $('btnChup').onclick = function () { $('camera').click(); };
-  $('camera').onchange = function () {
-    var file = this.files && this.files[0];
-    this.value = '';
-    if (!file || !loaiChoAnh) return;
-    nenAnh(file, loaiChoAnh)
-      .then(function (anh) {
-        $('xemAnh').src = anh;
-        $('xemAnh').classList.remove('hidden');
-        guiChamCong(loaiChoAnh, viTriChoAnh, anh);
-      })
-      .catch(function (e) { baoLoi($('msg'), e.message, 'err'); });
-  };
+  $('btnChup').onclick = function () { if (loaiChoAnh) moCamera(); };
+  $('btnChupCam').onclick = chupTuCamera;
+  $('btnHuyCam').onclick = tatCamera;
   $('btnBao').onclick = guiBao;
   $('segMuon').onclick = function () { chonLoai('Đi muộn'); };
   $('segNghi').onclick = function () { chonLoai('Xin nghỉ'); };
@@ -889,6 +926,7 @@
     $('dsTaiLieu').innerHTML = '';
     $('nhacDoc').classList.add('hidden');
     $('lopTB').classList.add('hidden');
+    tatCamera();
     $('pin').value = ''; $('btnDangNhap').disabled = false; $('msgDangNhap').className = 'msg';
     $('manChamCong').classList.add('hidden');
     $('manDangNhap').classList.remove('hidden');
