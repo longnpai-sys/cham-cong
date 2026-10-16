@@ -257,10 +257,20 @@
   function doc(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function baoLoi(el, text, kieu) { el.className = 'msg ' + kieu; el.textContent = text; }
 
+  // Thao tác chỉ đọc: máy chủ Google thỉnh thoảng trả trang lỗi, gặp thì tự thử lại 1 lần.
+  // Không áp dụng cho chấm công, báo nghỉ, tải tài liệu... để tránh ghi trùng.
+  var CHI_DOC = ['dangNhap', 'lichSu', 'thongBao', 'taiLieu', 'xemNgay'];
+
   function goi(hanhDong, duLieu) {
     var yc = Object.assign({ hanhDong: hanhDong }, duLieu);
-    return fetch(API, { method: 'POST', body: JSON.stringify(yc) })
-      .then(function (r) { return r.json(); })
+    function gui() {
+      return fetch(API, { method: 'POST', body: JSON.stringify(yc) }).then(function (r) { return r.json(); });
+    }
+    return gui()
+      .catch(function () {
+        if (CHI_DOC.indexOf(hanhDong) === -1) throw new Error();
+        return new Promise(function (r) { setTimeout(r, 1500); }).then(gui);
+      })
       .catch(function () { throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.'); })
       .then(function (kq) { if (!kq.ok) throw new Error(kq.loi); return kq.data; });
   }
