@@ -107,6 +107,17 @@
     .xn-ds { font-size: 13px; margin-top: 6px; background: #f8fafc; border-radius: 8px; padding: 8px 10px; }
     .xn-ds .chua { color: #991b1b; }
     .nhac-doc { background: #fef3c7; color: #92400e; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-hd { background: #fff; color: #1e1b4b; border: 1px solid #c7d2fe; font-size: 16px; padding: 14px; margin-top: 4px; }
+    .hd details { background: #fff; border-radius: 12px; margin-top: 10px; padding: 0 14px; }
+    .hd summary { font-weight: 700; padding: 13px 0; cursor: pointer; color: #1e1b4b; list-style: none; }
+    .hd summary::-webkit-details-marker { display: none; }
+    .hd summary::before { content: '▸ '; color: #6b7280; }
+    .hd details[open] summary::before { content: '▾ '; }
+    .hd .nd { padding: 0 0 12px; font-size: 14.5px; line-height: 1.5; }
+    .hd ol, .hd ul { margin: 4px 0 8px; padding-left: 22px; }
+    .hd ul { list-style: disc; } .hd ol { list-style: decimal; }
+    .hd li { display: list-item; padding: 0; border-bottom: 0; font-size: 14.5px; margin-bottom: 4px; }
+    .hd .chu-y { background: #fef3c7; color: #92400e; border-radius: 8px; padding: 8px 10px; margin: 6px 0 8px; }
   </style>
 </head>
 <body>
@@ -175,7 +186,7 @@
       <div id="khungDuKien"><label for="bnDuKien">Dự kiến có mặt lúc</label><input id="bnDuKien" type="time"></div>
       <label for="bnDienGiai">Diễn giải (bắt buộc)</label>
       <textarea id="bnDienGiai" placeholder="VD: xe hỏng giữa đường / đưa con đi khám"></textarea>
-      <div class="note" style="margin-top:6px">Nội quy: báo đi muộn trước giờ làm ít nhất 15 phút, xin nghỉ đột xuất ít nhất 30 phút. Mọi người trong công ty sẽ thấy thông báo này.</div>
+      <div class="note" style="margin-top:6px">Báo đi muộn trước giờ vào làm (8:00 sáng, 13:15 chiều); xin nghỉ đột xuất ít nhất 30 phút. Mọi người trong công ty sẽ thấy thông báo này.</div>
       <button id="btnBao" class="btn-bao">Gửi báo</button>
       <div id="msgBao" class="msg"></div>
     </div>
@@ -219,6 +230,134 @@
       <div id="dsLichSu" style="margin-top:8px"></div>
     </div>
     <button id="btnThoat" class="link">Đăng xuất</button>
+  </div>
+
+  <button id="btnHuongDan" class="btn-hd" type="button">📘 Hướng dẫn sử dụng</button>
+</div>
+
+<div id="lopHD" class="lop-phu hidden">
+  <div class="bang-tb hd">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0;font-size:19px">📘 Hướng dẫn sử dụng</h2>
+      <button id="btnDongHD" type="button" style="width:auto;padding:6px 14px;font-size:15px;background:#e5e7eb">Đóng</button>
+    </div>
+    <div class="note" style="margin-top:4px">Bấm vào từng mục để xem.</div>
+
+    <details id="hdIphone">
+      <summary>Đưa biểu tượng ra màn hình – iPhone</summary>
+      <div class="nd">
+        <div class="chu-y">iPhone phải tạo biểu tượng bằng <b>Safari</b> và <b>TẮT</b> "Mở dưới dạng ứng dụng web". Nếu để bật (hoặc tạo bằng Chrome), iPhone sẽ chặn vị trí và không chấm công được.</div>
+        <b>Phần 1 – Cho phép vị trí</b> (để không bị hỏi mỗi lần mở)
+        <ol>
+          <li>Cài đặt → Ứng dụng → Safari → mục <b>Cài đặt cho trang web</b> → Vị trí → <b>Cho phép</b>.</li>
+          <li>Cài đặt → Quyền riêng tư &amp; Bảo mật → Dịch vụ định vị → BẬT → <b>Trang web Safari</b> → <b>Khi dùng ứng dụng</b>, bật <b>Vị trí chính xác</b>.</li>
+        </ol>
+        <b>Phần 2 – Tạo biểu tượng</b>
+        <ol>
+          <li>Mở <b>Safari</b>, vào trang chấm công, đăng nhập, để tích <b>Ghi nhớ</b>.</li>
+          <li>Bấm nút <b>Chia sẻ</b> (hình vuông có mũi tên lên). iOS 26: bấm <b>•••</b> ở góc dưới → Chia sẻ.</li>
+          <li>Chọn <b>Thêm vào MH chính</b>.</li>
+          <li><b>TẮT</b> "Mở dưới dạng ứng dụng web" → bấm <b>Thêm</b>.</li>
+        </ol>
+        Đã lỡ tạo biểu tượng kiểu cũ và bị báo chặn vị trí: nhấn giữ biểu tượng → Xóa ứng dụng → tạo lại như trên (không mất dữ liệu chấm công).
+      </div>
+    </details>
+
+    <details id="hdAndroid">
+      <summary>Đưa biểu tượng ra màn hình – Android</summary>
+      <div class="nd">
+        <ol>
+          <li>Mở <b>Chrome</b>, vào trang chấm công.</li>
+          <li>Bấm <b>⋮</b> (góc trên bên phải) → <b>Thêm vào màn hình chính</b> (hoặc "Cài đặt ứng dụng").</li>
+          <li>Máy hỏi thì chọn <b>Cài đặt</b> → <b>Thêm</b> (hoặc "Thêm tự động").</li>
+          <li>Mở biểu tượng <b>NT – Chấm công</b>, đăng nhập một lần.</li>
+          <li>Lần đầu chấm, máy hỏi vị trí → chọn <b>Cho phép khi truy cập trang web</b> (đừng chọn "Chỉ lần này").</li>
+        </ol>
+        Không thấy biểu tượng: vuốt sang các trang màn hình khác hoặc mở ngăn ứng dụng tìm "Chấm công".
+      </div>
+    </details>
+
+    <details>
+      <summary>Đăng nhập</summary>
+      <div class="nd">
+        <ul>
+          <li><b>Mã nhân viên</b> là <b>họ tên của bạn</b>, có dấu hay không dấu đều được (vd "Nguyễn Văn An" hoặc "nguyen van an").</li>
+          <li><b>Mã PIN</b>: công ty gửi riêng cho bạn. Giữ bí mật, không đưa người khác.</li>
+          <li>Để tích <b>Ghi nhớ</b> thì lần sau mở là vào thẳng.</li>
+          <li>Nhập sai 5 lần sẽ bị khóa 5 phút.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Chấm công hằng ngày</summary>
+      <div class="nd">
+        Mỗi ngày bấm <b>3 lần</b>:
+        <ol>
+          <li><b>VÀO</b> buổi sáng khi đến (giờ làm 8:00).</li>
+          <li><b>VÀO</b> buổi chiều (từ 12:45 trở đi máy tự tính là vào chiều; giờ làm 13:15).</li>
+          <li><b>RA</b> khi về (tan làm 17:15).</li>
+        </ol>
+        <ul>
+          <li>Quên chấm buổi nào thì buổi đó <b>không được tính công</b>.</li>
+          <li>Làm thêm tính từ 17:45 (sau giờ tan làm 30 phút).</li>
+          <li>Sau mỗi lần bấm, xem mục <b>Hôm nay</b> để chắc chắn đã ghi nhận. Báo lỗi mạng thì xem mục Hôm nay trước rồi mới bấm lại, tránh chấm trùng.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Chấm công khi ở chỗ khách / ngoài công ty</summary>
+      <div class="nd">
+        <ol>
+          <li>Gõ <b>tên khách hàng</b> vào ô Ghi chú (bắt buộc).</li>
+          <li>Bấm VÀO hoặc RA.</li>
+          <li>Phần mềm mở camera: hướng vào nơi bạn đang đứng (cửa hàng, biển hiệu, máy đang sửa) → bấm <b>📷 Chụp</b>.</li>
+        </ol>
+        Ảnh được in sẵn giờ và tên bạn. Không chọn được ảnh có sẵn trong máy.
+      </div>
+    </details>
+
+    <details>
+      <summary>Báo đi muộn / Xin nghỉ</summary>
+      <div class="nd">
+        <ol>
+          <li>Ở mục <b>Báo đi muộn / Xin nghỉ</b>, chọn loại, ngày, buổi.</li>
+          <li>Đi muộn: ghi giờ dự kiến có mặt.</li>
+          <li>Ghi <b>lý do</b> (bắt buộc) → <b>Gửi báo</b>.</li>
+        </ol>
+        <div class="chu-y">Theo nội quy: báo đi muộn <b>trước giờ vào làm</b> (8:00 sáng, 13:15 chiều); xin nghỉ đột xuất ít nhất <b>30 phút</b>. Mọi người trong công ty đều thấy thông báo (biểu tượng 🔔).</div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Tài liệu công ty &amp; xác nhận đã đọc</summary>
+      <div class="nd">
+        <ul>
+          <li>Mục <b>Tài liệu công ty</b>: nội quy, quy trình, biểu mẫu… Chạm vào tên để mở.</li>
+          <li>Có dòng vàng "Bạn có … tài liệu cần đọc và xác nhận": mở tài liệu ra đọc, xong bấm <b>Tôi đã đọc và hiểu</b>.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Xem lại lịch sử chấm công</summary>
+      <div class="nd">Mục <b>Lịch sử chấm công</b> → chọn tháng → <b>Xem</b>: từng ngày giờ vào/ra, đi muộn, làm thêm, số công.</div>
+    </details>
+
+    <details>
+      <summary>Báo lỗi vị trí / không định vị được</summary>
+      <div class="nd">
+        <ul>
+          <li><b>"Điện thoại đang CHẶN quyền vị trí"</b>: iPhone xem mục iPhone ở trên (Phần 1 và Phần 2). Android: chạm biểu tượng bên trái thanh địa chỉ Chrome → Quyền → Vị trí → Cho phép.</li>
+          <li><b>"Không bắt được tín hiệu"</b>: đang trong nhà kín, kho, tầng hầm → ra gần cửa hoặc ngoài trời rồi bấm lại.</li>
+          <li>Cần chấm ngay: bấm nút <b>📷 Chụp ảnh</b> hiện ra để chấm bằng ảnh.</li>
+          <li>Không thấy giao diện mới: tắt hẳn biểu tượng chấm công rồi mở lại.</li>
+        </ul>
+      </div>
+    </details>
+
+    <div class="note" style="margin:14px 2px 4px">Vẫn vướng mắc: chụp màn hình gửi Ms Giang hoặc Mr Long.</div>
   </div>
 </div>
 
@@ -774,11 +913,15 @@
 
   var LOI_VI_TRI = {
     chan: 'Điện thoại đang CHẶN quyền vị trí nên không định vị được.\n' +
-      '• iPhone: Cài đặt → Quyền riêng tư & Bảo mật → Dịch vụ định vị → bật. Kéo xuống chọn Chrome (hoặc Trang web Safari) → "Khi dùng ứng dụng", bật "Vị trí chính xác".\n' +
+      '• iPhone (dùng Safari): Cài đặt → Ứng dụng → Safari → Vị trí → Cho phép. Và Cài đặt → Quyền riêng tư & Bảo mật → Dịch vụ định vị → Trang web Safari → "Khi dùng ứng dụng", bật "Vị trí chính xác".\n' +
       '• Android: Cài đặt → Vị trí → bật; Chrome → Quyền → Vị trí → Cho phép.\n' +
       'Sau đó tắt hẳn ứng dụng chấm công, mở lại và bấm lại. Cần chấm ngay thì bấm nút chụp ảnh bên dưới.',
     yeu: 'Không bắt được tín hiệu định vị (thường do đang ở trong nhà kín, tầng hầm, kho).\n' +
       'Hãy ra gần cửa sổ hoặc ra ngoài trời rồi bấm lại, hoặc bấm nút bên dưới để chụp ảnh nơi bạn đang đứng.',
+    // iPhone mở từ biểu tượng dạng "ứng dụng web": iOS chặn vị trí, cài đặt Safari không áp dụng
+    chanWebApp: 'iPhone đang CHẶN vị trí khi mở từ biểu tượng này (biểu tượng tạo ở chế độ "ứng dụng web").\n' +
+      'Cách sửa: nhấn giữ biểu tượng NT → Xóa ứng dụng. Mở Safari → vào trang chấm công → Chia sẻ → Thêm vào MH chính → TẮT "Mở dưới dạng ứng dụng web" → Thêm.\n' +
+      'Cần chấm ngay thì bấm nút chụp ảnh bên dưới.',
     khongHoTro: 'Trình duyệt này không hỗ trợ định vị. Hãy mở trang chấm công bằng Safari hoặc Chrome, hoặc bấm nút bên dưới để chụp ảnh.',
   };
 
@@ -798,7 +941,8 @@
         $('btnVao').disabled = $('btnRa').disabled = false;
         $('btnChup').textContent = '📷 Chụp ảnh để chấm ' + loai;
         $('khungAnh').classList.remove('hidden');
-        baoLoi(msg, LOI_VI_TRI[kq.loi], 'err');
+        var laWebAppIphone = window.navigator.standalone === true;
+        baoLoi(msg, LOI_VI_TRI[kq.loi === 'chan' && laWebAppIphone ? 'chanWebApp' : kq.loi], 'err');
         return;
       }
       guiChamCong(loai, kq.viTri, null);
@@ -923,6 +1067,15 @@
   $('btnChupCam').onclick = chupTuCamera;
   $('btnHuyCam').onclick = tatCamera;
   $('btnBao').onclick = guiBao;
+  $('btnHuongDan').onclick = function () {
+    var ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua)) $('hdIphone').open = true;
+    else if (/Android/.test(ua)) $('hdAndroid').open = true;
+    $('lopHD').classList.remove('hidden');
+    $('lopHD').scrollTop = 0;
+  };
+  $('btnDongHD').onclick = function () { $('lopHD').classList.add('hidden'); };
+  $('lopHD').onclick = function (e) { if (e.target === this) this.classList.add('hidden'); };
   $('segMuon').onclick = function () { chonLoai('Đi muộn'); };
   $('segNghi').onclick = function () { chonLoai('Xin nghỉ'); };
   chonLoai('Đi muộn');
