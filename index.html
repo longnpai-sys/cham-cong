@@ -313,11 +313,11 @@
       <summary>Chấm công khi ở chỗ khách / ngoài công ty</summary>
       <div class="nd">
         <ol>
+          <li>Bấm VÀO hoặc RA. Phần mềm báo bạn đang ở ngoài và hiện nút chụp ảnh.</li>
           <li>Gõ <b>tên khách hàng</b> vào ô Ghi chú (bắt buộc).</li>
-          <li>Bấm VÀO hoặc RA.</li>
-          <li>Phần mềm mở camera: hướng vào nơi bạn đang đứng (cửa hàng, biển hiệu, máy đang sửa) → bấm <b>📷 Chụp</b>.</li>
+          <li>Bấm nút <b>📷 Chụp ảnh</b>, hướng camera vào nơi bạn đang đứng (cửa hàng, biển hiệu, máy đang sửa) → bấm <b>📷 Chụp</b>.</li>
         </ol>
-        Ảnh được in sẵn giờ và tên bạn. Không chọn được ảnh có sẵn trong máy.
+        Chụp xong phần mềm tự ghi nhận, <b>không cần bấm VÀO/RA lại</b>. Ảnh được in sẵn giờ và tên bạn. Không chọn được ảnh có sẵn trong máy.
       </div>
     </details>
 
@@ -928,7 +928,7 @@
     khongHoTro: 'Trình duyệt này không hỗ trợ định vị. Hãy mở trang chấm công bằng Safari hoặc Chrome, hoặc bấm nút bên dưới để chụp ảnh.',
   };
 
-  var loaiChoAnh = null, viTriChoAnh = null;
+  var loaiChoAnh = null, viTriChoAnh = null, canTenKhach = false;
 
   function cham(loai) {
     var msg = $('msg');
@@ -941,6 +941,7 @@
         // Không có vị trí: bắt buộc chụp ảnh tại chỗ. Mở camera phải do người dùng bấm nút.
         loaiChoAnh = loai;
         viTriChoAnh = null;
+        canTenKhach = false;
         $('btnVao').disabled = $('btnRa').disabled = false;
         $('btnChup').textContent = '📷 Chụp ảnh để chấm ' + loai;
         $('khungAnh').classList.remove('hidden');
@@ -969,6 +970,7 @@
           // Ở ngoài văn phòng/kho: giữ vị trí vừa lấy, chờ chụp ảnh rồi gửi lại
           loaiChoAnh = loai;
           viTriChoAnh = viTri;
+          canTenKhach = true;
           $('btnChup').textContent = '📷 Chụp ảnh để chấm ' + loai;
           $('khungAnh').classList.remove('hidden');
           baoLoi(msg, e.message.replace(/^\[CAN_ANH\]\s*/, ''), 'err');
@@ -1066,7 +1068,15 @@
   $('btnChuong').onclick = moBangTB;
   $('btnDongTB').onclick = function () { $('lopTB').classList.add('hidden'); };
   $('lopTB').onclick = function (e) { if (e.target === this) this.classList.add('hidden'); };
-  $('btnChup').onclick = function () { if (loaiChoAnh) moCamera(); };
+  $('btnChup').onclick = function () {
+    if (!loaiChoAnh) return;
+    if (canTenKhach && !$('ghiChu').value.trim()) {
+      baoLoi($('msg'), 'Hãy ghi tên khách hàng vào ô ghi chú trước khi chụp ảnh.', 'err');
+      $('ghiChu').focus();
+      return;
+    }
+    moCamera();
+  };
   $('btnChupCam').onclick = chupTuCamera;
   $('btnHuyCam').onclick = tatCamera;
   $('btnBao').onclick = guiBao;
